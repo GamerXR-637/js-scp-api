@@ -1,20 +1,16 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
 
-// Helper function to harmonize SCP ID
 function harmonizeId(id) {
-  return id.toString().padStart(3, "0"); // Converts the ID to a zero-padded 3-digit string
+  return id.toString().padStart(3, "0");
 }
 
-// Helper function to relax keys
 function relaxKey(key) {
-  return key.toLowerCase().replace(/ /g, "_"); // Converts "Object Class" to "object_class"
+  return key.toLowerCase().replace(/ /g, "_");
 }
 
-// Base URL for SCP Wiki
 const baseUrl = "http://www.scpwiki.com/scp-";
 
-// Main scraping function
 async function scrapeSCP(id) {
   const resultDict = {};
   const _id = harmonizeId(id);
@@ -62,20 +58,17 @@ async function scrapeSCP(id) {
       }
     });
 
-    // Add the last key-value pair
     if (currentKey) {
       const _k = relaxKey(currentKey);
       currentValue = currentValue.replace(/\u2588+/g, "[REDACTED]");
       resultDict[_k] = currentValue.trim();
     }
 
-    // Extract the SCP name (if available)
     const titleTag = $("title").text();
     if (titleTag) {
-      resultDict["name"] = titleTag.split(" - ")[0]; // Extract the name before " - SCP Foundation"
+      resultDict["name"] = titleTag.split(" - ")[0];
     }
 
-    // Format the output as per the desired structure
     return {
       id: `SCP-${_id}`,
       more_info: Object.fromEntries(
@@ -95,13 +88,8 @@ async function scrapeSCP(id) {
   }
 }
 
-// Vercel serverless function handler
-module.exports = async (req, res) => {
-  const scpId = req.query.scp; // Get the SCP ID from the query parameter
-  if (!scpId || isNaN(scpId)) {
-    return res.status(400).json({ error: "Invalid or missing SCP ID" });
-  }
+console.log("SCP Scraper initialized.");
 
-  const scpData = await scrapeSCP(parseInt(scpId, 10));
-  res.json(scpData);
-};
+(async () => {
+  console.log(await scrapeSCP(123));
+})();
